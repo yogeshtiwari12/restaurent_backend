@@ -50,10 +50,13 @@ export const saveroomdetails = async (req, res) => {
     if (!photo1 || !photo2 || !photo3) {
         return res.status(400).json({ message: "All three photos are required" });
     }
-    const { hotelname, roomType, description } = req.body;
+    const { hotelname, roomType, description,total_rooms } = req.body;
     try {
-        const ishotelexist = await Room.findOne({ hotelname });
-        if (ishotelexist) {
+
+        const hoteid = req.params.id;
+        const ishotelexist = await Hotel.findById(hoteid);
+        const hotelroomtype = await Hotel.findOne({ roomType });
+        if (ishotelexist && hotelroomtype) {
             return res.status(400).json({ message: "Room details already exist for this hotel" });
         }
         const uploadResponse1 = await cloudinary.v2.uploader.upload(photo1.tempFilePath);
@@ -64,6 +67,7 @@ export const saveroomdetails = async (req, res) => {
             hotelname,
             roomType,
             description,
+            total_rooms,
             photo1: {
                 public_id: uploadResponse1.public_id,
                 url: uploadResponse1.secure_url,
@@ -210,6 +214,7 @@ export const gethoteldata = async (req, res) => {
 };
 
 
+
 export const updatedetails = async (req, res) => {
     const hotelid = req.params.id;
     try {
@@ -223,7 +228,22 @@ export const updatedetails = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ message: "Error updating hotel", error: error.message });
-    
+
     }
 
+}
+export const roomdetails_related_to_hotel = async (req, res) => {
+    const { hotelname } = req.body;
+    try {
+        const allroomdata = await Room.find({ hotelname })
+
+        if (!allroomdata) {
+            return res.status(404).json({ message: "Hotel related to room are not found" });
+        }
+        res.json({ message: "Data Fetced successfully", allroomdata: allroomdata });
+
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error retrieving room details", error: error.message });
+    }
 }

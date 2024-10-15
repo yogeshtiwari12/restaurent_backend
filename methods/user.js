@@ -116,7 +116,7 @@ export const getMyProfile = async (req, res) => {
   try {
     const user = req.user;
     const email = user.email;
-    const bookingdetails = await Booking.findOne({ user_email: email });
+    const bookingdetails = await Booking.find({ user_email: email });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -125,23 +125,25 @@ export const getMyProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found " });
     }
 
-    res.status(200).json({
-      message: "User profile fetched successfully",
-      user: {
+    const  userprofile = {
         name: user.name,
-        email: user.email,
+        email: user.email ,
         phone: user.phone,
         role: user.role,
-
-      },
-      booking: {
-        hotel_name: bookingdetails.user_hotel_name,
-        room_no: bookingdetails.user_room_no,
-        total_price: bookingdetails.total_price,
-        booking_date: bookingdetails.user_date
       }
 
-    });
+    const bookings = bookingdetails.map(booking => ({
+      hotel_name: booking.user_hotel_name,
+      room_no: booking.user_room_no,  
+      total_price: booking.total_price,
+      booking_date: booking.user_date
+      
+    }));
+
+    res.json({ message: "User profile fetched successfully",
+       user:userprofile, 
+       bookings:bookings });
+
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
